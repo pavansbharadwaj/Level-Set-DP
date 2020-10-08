@@ -1,0 +1,35 @@
+task.nStages = numel(task.s)-1;     % number of samples
+s = task.s;                         %[m] vector of samples
+task.ds = s(2) - s(1);              %[m] sampling interval
+sf = s(end);                        %[m] length of horizon
+
+L = V.frontaxlepos - V.rearaxlepos;
+Lf = V.length - V.rearaxlepos;
+Lr = -V.rearaxlepos;
+B = V.width/2;  % [m] Half width of the vehicle
+
+% create anonymous function for approximate bus stop geometry
+c = 1;
+task.fcn_busstopgeometry=@(x) ...
+    task.busstopwidth./(1+exp(-c*(x - task.busstopedgepos))) + task.lanewidth/2;
+% actual busstop geometry
+task.busstopgeometry = task.lanewidth/2*ones(task.nStages,1);
+task.busstopgeometry(task.s > task.busstopedgepos) = task.lanewidth/2 + task.busstopwidth;
+
+
+% Grids and terminal set
+
+xMin = [-task.lanewidth/2*ones(N+1,1), task.vmin, task.yawmin];
+xMax = [max(task.fcn_busstopgeometry(s)), task.vmax, task.yawmax];
+uMin = [task.axmin, task.deltamin];
+uMax = [task.axmax, task.deltamax];
+[grid_x, grid_u] = createGrid(task.Nx, xMin, xMax,...
+    task.Nu, uMin, uMax);
+
+xfMin = [];
+xfMax = [];
+
+[TerminalSetPoints, notUsed] = createGrid(task.Nx, [0,0,0], [0.2,0.2,0.2],...
+    [1,1,1], uMin, uMax);
+
+TerminalSet = PointsToBoolIndices(TerminalSetPoints, grid_x);

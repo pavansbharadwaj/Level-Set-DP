@@ -1,0 +1,13 @@
+function isFeas = checkPointIsFeasible(point, grid_x, feasSet)
+isFeas = false;
+point = reshape(point, 1,3);
+
+[d, index]= FindNearestNeighbours(point, grid_x);
+
+if d <= threshold
+    if feasSet(index)
+        isFeas = true;
+    end
+end
+
+end
